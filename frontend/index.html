@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运动助手 - 实时运动监测</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 主应用界面 -->
+        <div id="app">
+            <header>
+                <h1>运动助手</h1>
+            </header>
+
+            <main>
+                <div class="card">
+                    <h2>实时心率数据</h2>
+                    <div class="heart-rate-display">
+                        <div class="current-heart-rate">
+                            <span id="heartRateValue">--</span>
+                            <span class="unit">bpm</span>
+                        </div>
+                        <div class="status" id="heartRateStatus">等待数据...</div>
+                    </div>
+                </div>
+
+                <!-- 运动监测部分 -->
+                <div class="card">
+                    <h2>运动监测</h2>
+                    <div class="motion-stats">
+                        <div class="motion-stat">
+                            <div class="stat-label">当前速度</div>
+                            <div class="stat-value" id="currentSpeed">0.0</div>
+                            <div class="stat-unit">km/h</div>
+                        </div>
+                        <div class="motion-stat">
+                            <div class="stat-label">平均速度</div>
+                            <div class="stat-value" id="averageSpeed">0.0</div>
+                            <div class="stat-unit">km/h</div>
+                        </div>
+                        <div class="motion-stat">
+                            <div class="stat-label">运动状态</div>
+                            <div class="stat-value" id="motionStatus">静止</div>
+                            <div class="stat-icon" id="motionIcon">⏸️</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 距离和位置信息 -->
+                    <div class="location-stats">
+                        <div class="motion-stat">
+                            <div class="stat-label">骑行距离</div>
+                            <div class="stat-value" id="distanceTraveled">0.00</div>
+                            <div class="stat-unit">km</div>
+                        </div>
+                        <div class="motion-stat">
+                            <div class="stat-label">当前位置</div>
+                            <div class="stat-value" id="locationName">未定位</div>
+                            <div class="stat-coordinates" id="locationCoordinates"></div>
+                            <div class="stat-icon">📍</div>
+                        </div>
+                        <div class="motion-stat">
+                            <div class="stat-label">定位精度</div>
+                            <div class="stat-value" id="locationAccuracy">--</div>
+                            <div class="stat-unit">m</div>
+                        </div>
+                    </div>
+                    
+                    <div class="motion-controls">
+                        <button id="startMotionTracking" class="btn-primary">开始运动追踪(包含定位)</button>
+                        <button id="stopMotionTracking" class="btn-secondary">停止运动追踪</button>
+                        <button id="exportToExcel" class="btn-success">导出运动记录</button>
+                        <button id="resetAppData" class="btn-warning">重置应用数据</button>
+                        <div class="motion-sensitivity">
+                            <label for="sensitivitySlider">灵敏度:</label>
+                            <input type="range" id="sensitivitySlider" min="1" max="10" value="5">
+                            <span id="sensitivityValue">5</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 运动目标和提醒设置 -->
+                <div class="card">
+                    <h2>运动目标与提醒</h2>
+                    <div class="goals-container">
+                        <div class="goal-section">
+                            <h3>运动目标设置</h3>
+                            <div class="goal-setting">
+                                <div class="goal-item">
+                                    <label for="distanceGoal">距离目标 (km):</label>
+                                    <input type="number" id="distanceGoal" min="0" step="0.1" value="10">
+                                </div>
+                                <div class="goal-item">
+                                    <label for="timeGoal">时间目标 (分钟):</label>
+                                    <input type="number" id="timeGoal" min="0" step="5" value="30">
+                                </div>
+
+                                <button id="saveGoals" class="btn-primary">保存目标</button>
+                            </div>
+                        </div>
+                        
+                        <div class="reminder-section">
+                            <h3>定时提醒设置</h3>
+                            <div class="reminder-setting">
+                                <div class="reminder-item">
+                                    <label>
+                                        <input type="checkbox" id="enableTimeReminder"> 定时提醒
+                                    </label>
+                                    <select id="reminderInterval">
+                                        <option value="5">每5分钟</option>
+                                        <option value="10" selected>每10分钟</option>
+                                        <option value="15">每15分钟</option>
+                                        <option value="30">每30分钟</option>
+                                        <option value="60">每60分钟</option>
+                                    </select>
+                                </div>
+                                <div class="reminder-item">
+                                    <label>
+                                        <input type="checkbox" id="enableDistanceReminder"> 距离提醒
+                                    </label>
+                                    <input type="number" id="distanceReminderInterval" min="1" step="1" value="5"> 公里
+                                </div>
+                                <div class="reminder-item">
+                                    <label>
+                                        <input type="checkbox" id="enableHeartRateAlert"> 心率过高提醒
+                                    </label>
+                                    <input type="number" id="heartRateThreshold" min="60" max="220" step="5" value="160"> BPM
+                                </div>
+                                <button id="saveReminders" class="btn-primary">保存提醒设置</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="goal-progress">
+                        <h3>当前进度</h3>
+                        <div class="progress-bars">
+                            <div class="progress-item">
+                                <label>距离进度</label>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="distanceProgress"></div>
+                                </div>
+                                <span id="distanceProgressText">0/10 km</span>
+                            </div>
+                            <div class="progress-item">
+                                <label>时间进度</label>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="timeProgress"></div>
+                                </div>
+                                <span id="timeProgressText">0/30 分钟</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>心率历史趋势</h2>
+                    <div class="chart-container">
+                        <canvas id="heartRateChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>附近设备列表</h2>
+                    <div id="deviceList" class="device-list">
+                        <p>正在扫描附近设备...</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>系统状态</h2>
+                    <div class="status-container">
+                        <div class="status-item">
+                            <span class="label">连接状态:</span>
+                            <span id="connectionStatus" class="status-value">未连接</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">最后更新:</span>
+                            <span id="lastUpdate" class="status-value">--</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
